@@ -10,12 +10,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@radix-ui/react-dropdown-menu";
-import { Bell, ChevronDown } from "lucide-react";
+import { Bell, ChevronDown, Menu } from "lucide-react";
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 
-const Header = ({ onOpenSidebar, title }: { onOpenSidebar?: () => void; title?: string }) => {
+const Header = ({
+  onOpenSidebar,
+  title,
+}: {
+  onOpenSidebar?: () => void;
+  title?: string;
+}) => {
   const dispatch = useDispatch();
   const { data: countries, isLoading } = useGetCountriesQuery();
   const { selectedCountryCode } = useSelector(
@@ -26,23 +32,19 @@ const Header = ({ onOpenSidebar, title }: { onOpenSidebar?: () => void; title?: 
     (c) => c.cca2 === selectedCountryCode
   );
 
-  const router = useRouter();
-
   return (
     <header className="flex h-16 items-center justify-between px-4 md:px-8 border-b bg-white">
       <div className="flex items-center gap-3">
-        {/* Mobile menu button */}
         <button
           className="md:hidden p-2 rounded-md mr-1"
           onClick={() => onOpenSidebar && onOpenSidebar()}
-          aria-label="Open menu"
         >
-          <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          <Menu />
         </button>
 
-        <h1 className="text-lg md:text-xl font-bold text-slate-800">{title || "My Recruitments"}</h1>
+        <h1 className="text-lg md:text-xl font-bold text-slate-800">
+          {title || "My Recruitments"}
+        </h1>
       </div>
 
       <div className="flex items-center gap-3">
@@ -67,7 +69,7 @@ const Header = ({ onOpenSidebar, title }: { onOpenSidebar?: () => void; title?: 
 
           <DropdownMenuContent
             align="end"
-            className="w-52 mt-2 rounded-md border bg-white shadow-lg max-h-70 overflow-y-auto"
+            className="w-52 mt-2 rounded-md border bg-white shadow-lg max-h-70 overflow-y-auto z-10"
           >
             {countries?.map((country) => (
               <DropdownMenuItem
@@ -105,13 +107,14 @@ const Header = ({ onOpenSidebar, title }: { onOpenSidebar?: () => void; title?: 
             </Avatar>
 
             <div className="flex items-center gap-1">
-              <span className="text-sm font-medium text-slate-700">John Doe</span>
+              <span className="text-sm font-medium text-slate-700">
+                John Doe
+              </span>
               <ChevronDown className="w-4 h-4 text-slate-500" />
             </div>
           </div>
         </div>
 
-        {/* mobile avatar stack */}
         <div className="md:hidden">
           <Avatar className="w-9 h-9 rounded-full">
             <AvatarImage src="/profilePhoto.svg" alt="John Doe" />
@@ -121,6 +124,6 @@ const Header = ({ onOpenSidebar, title }: { onOpenSidebar?: () => void; title?: 
       </div>
     </header>
   );
-}; 
+};
 
 export default Header;

@@ -9,14 +9,10 @@ export interface CountryData {
   cca2: string;
 }
 
-export interface LanguageState {
-  selectedCountryCode: string;
-}
-
 export interface Recruitment {
   id: string;
   recruitmentName: string;
   candidates: number;
-  startDate: string; // ISO date string
+  startDate: string;
   status: "In Progress" | "Completed" | "Draft" | "Archived";
 } 

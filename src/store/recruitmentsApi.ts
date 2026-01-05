@@ -1,7 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import type { Recruitment } from "@/types/types";
 
-// Fetch users from DummyJSON and map them to the Recruitment shape
 export const recruitmentsApi = createApi({
   reducerPath: "recruitmentsApi",
   baseQuery: fetchBaseQuery({ baseUrl: "https://dummyjson.com" }),
