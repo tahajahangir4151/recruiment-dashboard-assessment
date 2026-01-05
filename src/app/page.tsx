@@ -4,7 +4,6 @@ import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import Table from "@/components/Table";
-import Image from "next/image";
 
 export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false);

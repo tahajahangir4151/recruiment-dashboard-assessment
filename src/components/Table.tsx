@@ -4,8 +4,8 @@ import React, { useEffect, useState } from "react";
 import { useGetRecruitmentsQuery } from "@/store/recruitmentsApi";
 import { Edit, Trash2, Loader } from "lucide-react";
 import type { Recruitment } from "@/types/types";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 
 const STATUS_OPTIONS: Recruitment["status"][] = [
   "In Progress",
@@ -17,7 +17,6 @@ const STATUS_OPTIONS: Recruitment["status"][] = [
 type Tab = "Active" | "Archived" | "Draft";
 
 const Table = () => {
-  const router = useRouter();
 
   const { data: apiData, isLoading, error } = useGetRecruitmentsQuery();
 
@@ -120,12 +119,12 @@ const Table = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            className="hidden md:inline-flex h-11 px-5 rounded-md bg-emerald-500 text-white text-sm font-medium hover:bg-emerald-600 items-center gap-2 shadow-md"
-            onClick={() => router.push("/create")}
-          >
-            <span className="text-sm">Create New Recruitment</span>
-          </button>
+          <Link href={"/create"}>
+            {" "}
+            <button className="hidden md:inline-flex h-11 px-5 rounded-md bg-emerald-500 text-white text-sm font-medium cursor-pointer hover:bg-emerald-600 items-center gap-2 shadow-md">
+              <span className="text-sm">Create New Recruitment</span>
+            </button>
+          </Link>
         </div>
       </div>
 
