@@ -5,7 +5,6 @@ import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useRouter } from "next/navigation";
-import type { Recruitment } from "@/types/types";
 
 export default function CreatePage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -18,7 +17,7 @@ export default function CreatePage() {
     otherRole?: string;
     description?: string;
   }) {
-    console.log("Create (no-persist):", values);
+    console.log("Created", values);
     router.push("/");
   }
 
@@ -33,7 +32,7 @@ export default function CreatePage() {
         />
 
         <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-4xl mx-auto bg-white rounded-md border p-6">
+          <div className="max-w-8xl mx-auto bg-white rounded-md border p-6">
             <h2 className="text-lg font-semibold text-slate-800 mb-4">
               Create New Recruitment
             </h2>
@@ -67,17 +66,42 @@ function CreateForm({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!recruitmentName.trim()) {
+    const name = recruitmentName.trim();
+    const role = jobRole;
+    const lvl = level;
+    const other = otherRole.trim();
+    const desc = description.trim();
+
+    if (!name) {
       setError("Recruitment name is required");
+      return;
+    }
+    if (!role) {
+      setError("Job role is required");
+      return;
+    }
+
+    if (role === "Other" && !other) {
+      setError("Please specify the job role");
+      return;
+    }
+
+    if (!lvl) {
+      setError("Level is required");
+      return;
+    }
+
+    if (!desc) {
+      setError("Description is required");
       return;
     }
     setError("");
     onSave({
-      recruitmentName: recruitmentName.trim(),
-      jobRole,
-      level,
-      otherRole: otherRole.trim(),
-      description: description.trim(),
+      recruitmentName: name,
+      jobRole: role,
+      level: lvl,
+      otherRole: role === "Other" ? other : undefined,
+      description: desc,
     });
   }
 
@@ -92,17 +116,24 @@ function CreateForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <input
+          type="text"
+          value={recruitmentName}
+          onChange={(e) => setRecruitmentName(e.target.value)}
+          placeholder="Enter name of your Recruitment"
+          className="w-full px-3 py-2 rounded border text-sm"
+        />
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">
-            Job Role
-          </label>
           <select
             value={jobRole}
             onChange={(e) => setJobRole(e.target.value)}
             className="w-full px-3 py-2 rounded border text-sm"
           >
-            <option>Other</option>
+            <option>Job Role: Other</option>
             <option>UI/UX Designer</option>
             <option>Frontend Developer</option>
             <option>Backend Developer</option>
@@ -111,15 +142,12 @@ function CreateForm({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">
-            Select level of employee
-          </label>
           <select
             value={level}
             onChange={(e) => setLevel(e.target.value)}
             className="w-full px-3 py-2 rounded border text-sm"
           >
-            <option value="">Select level</option>
+            <option value="">Select level of employee</option>
             <option value="Junior">Junior</option>
             <option value="Mid">Mid</option>
             <option value="Senior">Senior</option>
@@ -129,27 +157,21 @@ function CreateForm({
 
       {jobRole === "Other" && (
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">
-            Other
-          </label>
           <input
             value={otherRole}
             onChange={(e) => setOtherRole(e.target.value)}
+            placeholder="Other"
             className="w-full px-3 py-2 rounded border text-sm"
-            placeholder="Other role"
           />
         </div>
       )}
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">
-          Description
-        </label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full px-3 py-2 rounded border text-sm h-32"
           placeholder="Write description here"
+          className="w-full px-3 py-2 rounded border text-sm h-32"
         />
       </div>
 
@@ -157,17 +179,19 @@ function CreateForm({
         <button
           type="button"
           onClick={handleCancel}
-          className="px-4 py-2 rounded border text-slate-700"
+          className="px-4 py-2 cursor-pointer rounded border text-slate-700"
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="px-4 py-2 rounded bg-emerald-500 text-white"
+          className="px-4 py-2 rounded bg-emerald-500 cursor-pointer text-white"
         >
           Save & Continue
         </button>
       </div>
+
+      {error && <p className="text-red-500 text-sm">{error}</p>}
     </form>
   );
 }
