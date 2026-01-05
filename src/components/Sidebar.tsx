@@ -6,11 +6,9 @@ import { X } from "lucide-react";
 const Sidebar = ({
   open = false,
   onClose,
-  onCreate,
 }: {
   open?: boolean;
   onClose?: () => void;
-  onCreate?: () => void;
 }) => {
   return (
     <>
