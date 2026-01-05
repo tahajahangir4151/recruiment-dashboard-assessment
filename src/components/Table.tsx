@@ -18,11 +18,14 @@ type Tab = "Active" | "Archived" | "Draft";
 
 const Table = () => {
   const router = useRouter();
-  const { data: apiRows, isLoading, error } = useGetRecruitmentsQuery();
+
+  const { data: apiData, isLoading, error } = useGetRecruitmentsQuery();
+
   const [rows, setRows] = useState<Recruitment[]>([]);
-  const [statusDropdown, setStatusDropdown] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
+  const [openStatusRowId, setOpenStatusRowId] = useState<string | null>(null);
+  const [page, setPage] = useState<number>(1);
   const [activeTab, setActiveTab] = useState<Tab>("Active");
+
   const PAGE_SIZE = 7;
 
   useEffect(() => {
@@ -34,10 +37,15 @@ const Table = () => {
           setRows(parsed);
           return;
         }
-      } catch {}
+      } catch (e) {
+        console.error("Failed to parse saved recruitments data:", e);
+      }
     }
-    if (apiRows) setRows(apiRows);
-  }, [apiRows]);
+
+    if (apiData) {
+      setRows(apiData);
+    }
+  }, [apiData]);
 
   useEffect(() => {
     localStorage.setItem("recruitments_data", JSON.stringify(rows));
@@ -50,27 +58,30 @@ const Table = () => {
   });
 
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
-  const displayedRows = filteredRows.slice(
-    (page - 1) * PAGE_SIZE,
-    page * PAGE_SIZE
-  );
+  const startIndex = (page - 1) * PAGE_SIZE;
+  const displayedRows = filteredRows.slice(startIndex, startIndex + PAGE_SIZE);
 
-  const changeStatus = (id: string, status: Recruitment["status"]) => {
-    setRows(rows.map((r) => (r.id === id ? { ...r, status } : r)));
-    setStatusDropdown(null);
-  };
+  function changeStatus(id: string, status: Recruitment["status"]) {
+    const updated = rows.map((r) => (r.id === id ? { ...r, status } : r));
+    setRows(updated);
+    setOpenStatusRowId(null);
+  }
 
-  const handleArchive = (id: string) => {
+  function archiveRecruitment(id: string) {
     if (!confirm("Archive this recruitment?")) return;
-    setRows(rows.map((r) => (r.id === id ? { ...r, status: "Archived" } : r)));
-  };
+    const updated = rows.map((r) =>
+      r.id === id ? { ...r, status: "Archived" } : r
+    );
+    setRows(updated);
+  }
 
-  const handleDelete = (id: string) => {
+  function deleteRecruitment(id: string) {
     if (!confirm("Delete this recruitment?")) return;
-    setRows(rows.filter((r) => r.id !== id));
-  };
+    const updated = rows.filter((r) => r.id !== id);
+    setRows(updated);
+  }
 
-  if (isLoading && rows.length === 0)
+  if (isLoading && rows.length === 0) {
     return (
       <div className="p-6 flex items-center justify-center">
         <div className="flex flex-col items-center gap-2 text-slate-600">
@@ -79,6 +90,7 @@ const Table = () => {
         </div>
       </div>
     );
+  }
 
   if (error) return <div className="p-6">Failed to load recruitments.</div>;
 
@@ -131,7 +143,7 @@ const Table = () => {
               <div className="flex items-center gap-2">
                 <button
                   className="p-1 rounded hover:bg-slate-100 text-[#06BF97]"
-                  onClick={() => handleArchive(row.id)}
+                  onClick={() => archiveRecruitment(row.id)}
                 >
                   <Image
                     src="/archive.svg"
@@ -142,7 +154,7 @@ const Table = () => {
                 </button>
                 <button
                   className="p-1 rounded hover:bg-slate-100 text-rose-500"
-                  onClick={() => handleDelete(row.id)}
+                  onClick={() => deleteRecruitment(row.id)}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -201,6 +213,7 @@ const Table = () => {
                 <td className="py-4 text-sm text-slate-600 text-center hidden md:table-cell">
                   {new Date(row.startDate).toLocaleDateString("en-US")}
                 </td>
+
                 <td className="py-4 text-center relative">
                   <button
                     className={`inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-white border ${
@@ -209,8 +222,8 @@ const Table = () => {
                         : "text-slate-600 border-slate-100"
                     }`}
                     onClick={() =>
-                      setStatusDropdown(
-                        statusDropdown === row.id ? null : row.id
+                      setOpenStatusRowId(
+                        openStatusRowId === row.id ? null : row.id
                       )
                     }
                   >
@@ -230,7 +243,7 @@ const Table = () => {
                     </svg>
                   </button>
 
-                  {statusDropdown === row.id && (
+                  {openStatusRowId === row.id && (
                     <ul className="absolute left-1/2 -translate-x-1/2 mt-2 w-44 bg-white rounded-md shadow-lg border z-20">
                       {STATUS_OPTIONS.map((opt) => (
                         <li
@@ -251,7 +264,7 @@ const Table = () => {
                   <div className="flex items-center justify-center gap-3">
                     <button
                       className="p-1 rounded hover:bg-slate-100 text-[#06BF97]"
-                      onClick={() => handleArchive(row.id)}
+                      onClick={() => archiveRecruitment(row.id)}
                     >
                       <Image
                         src="/archive.svg"
@@ -262,7 +275,7 @@ const Table = () => {
                     </button>
                     <button
                       className="p-1 rounded hover:bg-slate-100 text-rose-500"
-                      onClick={() => handleDelete(row.id)}
+                      onClick={() => deleteRecruitment(row.id)}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -287,6 +300,7 @@ const Table = () => {
           >
             Prev
           </button>
+
           <div className="px-3 py-1 bg-white rounded border shadow-sm flex items-center gap-2">
             <input
               className="w-12 text-center text-sm outline-none"
@@ -303,6 +317,7 @@ const Table = () => {
             <span>/</span>
             <span>{totalPages}</span>
           </div>
+
           <button
             className="px-3 py-1 rounded-md border"
             onClick={() => setPage(Math.min(totalPages, page + 1))}
