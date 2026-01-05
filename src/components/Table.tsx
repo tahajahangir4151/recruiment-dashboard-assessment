@@ -17,7 +17,6 @@ const STATUS_OPTIONS: Recruitment["status"][] = [
 type Tab = "Active" | "Archived" | "Draft";
 
 const Table = () => {
-
   const { data: apiData, isLoading, error } = useGetRecruitmentsQuery();
 
   const [rows, setRows] = useState<Recruitment[]>([]);
@@ -127,7 +126,7 @@ const Table = () => {
           </Link>
         </div>
       </div>
-
+      {/* Mobile view  */}
       <div className="md:hidden space-y-3">
         {displayedRows.map((row) => (
           <div key={row.id} className="bg-white p-3 rounded shadow-sm">
@@ -174,7 +173,7 @@ const Table = () => {
           </div>
         ))}
       </div>
-
+      {/* dekstop view  */}
       <div className="hidden md:block overflow-auto max-h-[calc(100vh-18rem)]">
         <table className="min-w-full table-auto border-separate border-spacing-y-2">
           <thead>
@@ -288,7 +287,7 @@ const Table = () => {
           </tbody>
         </table>
       </div>
-
+      {/* Pagination  */}
       <div className="mt-4 flex items-center justify-between text-sm text-slate-500">
         <div>Showing {filteredRows.length} recruitments</div>
         <div className="flex items-center gap-3">
