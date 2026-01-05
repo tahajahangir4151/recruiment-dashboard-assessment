@@ -5,21 +5,32 @@ import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useRouter } from "next/navigation";
+import { FormState, HandleSaveProp } from "@/types/types";
+import { useAddRecruitmentMutation } from "@/store/recruitmentsApi";
+import { Loader } from "lucide-react";
 
 export default function CreatePage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [addRecruitment] = useAddRecruitmentMutation();
+
   const router = useRouter();
 
-  function handleSave(values: {
-    recruitmentName: string;
-    jobRole: string;
-    level: string;
-    otherRole?: string;
-    description?: string;
-  }) {
-    console.log("Created", values);
-    router.push("/");
-  }
+  const handleSave = async (values: HandleSaveProp) => {
+    try {
+      const res = await addRecruitment({
+        recruitmentName: values.recruitmentName,
+        jobRole: values.jobRole,
+        level: values.level,
+        otherRole: values.otherRole,
+        description: values.description,
+      });
+
+      console.log("Created:", res);
+      router.push("/");
+    } catch (err) {
+      console.error("Failed to create recruitment:", err);
+    }
+  };
 
   return (
     <div className="flex min-h-screen">
@@ -46,81 +57,79 @@ export default function CreatePage() {
   );
 }
 
-function CreateForm({
+const CreateForm = ({
   onSave,
 }: {
-  onSave: (values: {
-    recruitmentName: string;
-    jobRole: string;
-    level: string;
-    otherRole?: string;
-    description?: string;
-  }) => void;
-}) {
-  const [recruitmentName, setRecruitmentName] = useState("");
-  const [jobRole, setJobRole] = useState("Other");
-  const [level, setLevel] = useState("");
-  const [otherRole, setOtherRole] = useState("");
-  const [description, setDescription] = useState("");
+  onSave: (values: HandleSaveProp) => void;
+}) => {
+  const initialState: FormState = {
+    recruitmentName: "",
+    jobRole: "Other",
+    level: "",
+    otherRole: "",
+    description: "",
+  };
+  const [form, setForm] = useState<FormState>(initialState);
   const [error, setError] = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const name = recruitmentName.trim();
-    const role = jobRole;
-    const lvl = level;
-    const other = otherRole.trim();
-    const desc = description.trim();
 
-    if (!name) {
-      setError("Recruitment name is required");
-      return;
-    }
-    if (!role) {
-      setError("Job role is required");
-      return;
+    const { recruitmentName, jobRole, level, otherRole, description } = form;
+
+    if (!recruitmentName.trim()) {
+      return setError("Recruitment name is required");
     }
 
-    if (role === "Other" && !other) {
-      setError("Please specify the job role");
-      return;
+    if (!jobRole) {
+      return setError("Job role is required");
     }
 
-    if (!lvl) {
-      setError("Level is required");
-      return;
+    if (jobRole === "Other" && !otherRole.trim()) {
+      return setError("Please specify the job role");
     }
 
-    if (!desc) {
-      setError("Description is required");
-      return;
+    if (!level) {
+      return setError("Level is required");
     }
+
+    if (!description.trim()) {
+      return setError("Description is required");
+    }
+
     setError("");
+
     onSave({
-      recruitmentName: name,
-      jobRole: role,
-      level: lvl,
-      otherRole: role === "Other" ? other : undefined,
-      description: desc,
+      recruitmentName: recruitmentName.trim(),
+      jobRole,
+      level,
+      otherRole: jobRole === "Other" ? otherRole.trim() : undefined,
+      description: description.trim(),
     });
-  }
+  };
 
-  function handleCancel() {
-    setRecruitmentName("");
-    setJobRole("Other");
-    setLevel("");
-    setOtherRole("");
-    setDescription("");
+  const handleCancel = () => {
+    setForm(initialState);
     setError("");
-  }
+  };
+
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <input
           type="text"
-          value={recruitmentName}
-          onChange={(e) => setRecruitmentName(e.target.value)}
+          name="recruitmentName"
+          value={form.recruitmentName}
+          onChange={handleChange}
           placeholder="Enter name of your Recruitment"
           className="w-full px-3 py-2 rounded border text-sm"
         />
@@ -129,8 +138,9 @@ function CreateForm({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
           <select
-            value={jobRole}
-            onChange={(e) => setJobRole(e.target.value)}
+            name="jobRole"
+            value={form.jobRole}
+            onChange={handleChange}
             className="w-full px-3 py-2 rounded border text-sm"
           >
             <option>Job Role: Other</option>
@@ -143,8 +153,9 @@ function CreateForm({
 
         <div>
           <select
-            value={level}
-            onChange={(e) => setLevel(e.target.value)}
+            name="level"
+            value={form.level}
+            onChange={handleChange}
             className="w-full px-3 py-2 rounded border text-sm"
           >
             <option value="">Select level of employee</option>
@@ -155,11 +166,12 @@ function CreateForm({
         </div>
       </div>
 
-      {jobRole === "Other" && (
+      {form.jobRole === "Other" && (
         <div>
           <input
-            value={otherRole}
-            onChange={(e) => setOtherRole(e.target.value)}
+            name="otherRole"
+            value={form.otherRole}
+            onChange={handleChange}
             placeholder="Other"
             className="w-full px-3 py-2 rounded border text-sm"
           />
@@ -168,8 +180,9 @@ function CreateForm({
 
       <div>
         <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          name="description"
+          value={form.description}
+          onChange={handleChange}
           placeholder="Write description here"
           className="w-full px-3 py-2 rounded border text-sm h-32"
         />
@@ -194,4 +207,4 @@ function CreateForm({
       {error && <p className="text-red-500 text-sm">{error}</p>}
     </form>
   );
-}
+};

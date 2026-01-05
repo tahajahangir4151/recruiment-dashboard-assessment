@@ -1,83 +1,72 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useGetRecruitmentsQuery } from "@/store/recruitmentsApi";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  useDeleteRecruimentMutation,
+  useGetRecruitmentsQuery,
+} from "@/store/recruitmentsApi";
 import { Edit, Trash2, Loader } from "lucide-react";
-import type { Recruitment } from "@/types/types";
+import { STATUS_OPTIONS, type Recruitment, type Tab } from "@/types/types";
 import Image from "next/image";
 import Link from "next/link";
-
-const STATUS_OPTIONS: Recruitment["status"][] = [
-  "In Progress",
-  "Completed",
-  "Draft",
-  "Archived",
-];
-
-type Tab = "Active" | "Archived" | "Draft";
+import { PAGE_SIZE } from "@/constants/app.constants";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/store/store";
+import {
+  archiveRecruitment,
+  changeStatus,
+  deleteRecruitment,
+  setRecruitments,
+} from "@/store/slices/recruitmentsSlice";
 
 const Table = () => {
-  const { data: apiData, isLoading, error } = useGetRecruitmentsQuery();
-
-  const [rows, setRows] = useState<Recruitment[]>([]);
+  const { data, isLoading, error } = useGetRecruitmentsQuery();
+  const [deleteRecruiment] = useDeleteRecruimentMutation();
+  const dispatch = useDispatch();
+  const rows = useSelector((state: RootState) => state.recruitments);
   const [openStatusRowId, setOpenStatusRowId] = useState<string | null>(null);
   const [page, setPage] = useState<number>(1);
   const [activeTab, setActiveTab] = useState<Tab>("Active");
 
-  const PAGE_SIZE = 7;
-
   useEffect(() => {
-    const saved = localStorage.getItem("recruitments_data");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setRows(parsed);
-          return;
-        }
-      } catch (e) {
-        console.error("Failed to parse saved recruitments data:", e);
-      }
+    if (data && rows.length === 0) {
+      dispatch(setRecruitments(data));
     }
+  }, [data, rows.length, dispatch]);
 
-    if (apiData) {
-      setRows(apiData);
-    }
-  }, [apiData]);
-
-  useEffect(() => {
-    localStorage.setItem("recruitments_data", JSON.stringify(rows));
-  }, [rows]);
-
-  const filteredRows = rows.filter((r) => {
-    if (activeTab === "Archived") return r.status === "Archived";
-    if (activeTab === "Draft") return r.status === "Draft";
-    return r.status !== "Archived" && r.status !== "Draft";
-  });
+  const filteredRows = useMemo(() => {
+    return rows.filter((r) => {
+      if (activeTab === "Archived") return r.status === "Archived";
+      if (activeTab === "Draft") return r.status === "Draft";
+      return r.status !== "Archived" && r.status !== "Draft";
+    });
+  }, [rows, activeTab]);
 
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
   const startIndex = (page - 1) * PAGE_SIZE;
   const displayedRows = filteredRows.slice(startIndex, startIndex + PAGE_SIZE);
 
-  function changeStatus(id: string, status: Recruitment["status"]) {
-    const updated = rows.map((r) => (r.id === id ? { ...r, status } : r));
-    setRows(updated);
+  const onChangeStatus = (id: string, status: Recruitment["status"]) => {
+    dispatch(changeStatus({ id, status }));
     setOpenStatusRowId(null);
-  }
+  };
 
-  function archiveRecruitment(id: string) {
+  const onArchive = (id: string) => {
     if (!confirm("Archive this recruitment?")) return;
-    const updated = rows.map((r) =>
-      r.id === id ? { ...r, status: "Archived" } : r
-    );
-    setRows(updated);
-  }
+    dispatch(archiveRecruitment(id));
+  };
 
-  function deleteRecruitment(id: string) {
+  const onDeleteRecruitment = async (id: string) => {
     if (!confirm("Delete this recruitment?")) return;
-    const updated = rows.filter((r) => r.id !== id);
-    setRows(updated);
-  }
+
+    try {
+      await deleteRecruiment(id);
+      dispatch(deleteRecruitment(id));
+    } catch (err) {
+      console.error("Failed to delete recruitment:", err);
+      alert("Failed to delete recruitment");
+    }
+  };
 
   if (isLoading && rows.length === 0) {
     return (
@@ -141,7 +130,7 @@ const Table = () => {
               <div className="flex items-center gap-2">
                 <button
                   className="p-1 rounded hover:bg-slate-100 text-[#06BF97]"
-                  onClick={() => archiveRecruitment(row.id)}
+                  onClick={() => onArchive(row.id)}
                 >
                   <Image
                     src="/archive.svg"
@@ -152,7 +141,7 @@ const Table = () => {
                 </button>
                 <button
                   className="p-1 rounded hover:bg-slate-100 text-rose-500"
-                  onClick={() => deleteRecruitment(row.id)}
+                  onClick={() => onDeleteRecruitment(row.id)}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -249,7 +238,7 @@ const Table = () => {
                           className={`px-3 py-2 text-sm cursor-pointer hover:bg-slate-50 ${
                             opt === row.status ? "font-semibold" : ""
                           }`}
-                          onClick={() => changeStatus(row.id, opt)}
+                          onClick={() => onChangeStatus(row.id, opt)}
                         >
                           {opt}
                         </li>
@@ -262,7 +251,7 @@ const Table = () => {
                   <div className="flex items-center justify-center gap-3">
                     <button
                       className="p-1 rounded hover:bg-slate-100 text-[#06BF97]"
-                      onClick={() => archiveRecruitment(row.id)}
+                      onClick={() => onArchive(row.id)}
                     >
                       <Image
                         src="/archive.svg"
@@ -273,7 +262,7 @@ const Table = () => {
                     </button>
                     <button
                       className="p-1 rounded hover:bg-slate-100 text-rose-500"
-                      onClick={() => deleteRecruitment(row.id)}
+                      onClick={() => onDeleteRecruitment(row.id)}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

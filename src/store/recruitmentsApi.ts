@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import type { Recruitment } from "@/types/types";
+import type { AddRecruitmentPayload, Recruitment } from "@/types/types";
 
 export const recruitmentsApi = createApi({
   reducerPath: "recruitmentsApi",
@@ -9,14 +9,35 @@ export const recruitmentsApi = createApi({
       query: () => "users?limit=100",
       transformResponse: (response: { users: any[] }) =>
         response.users.map((u) => ({
-          id: `U-${String(u.id).padStart(3, "0")}`,
+          id: `${u.id}`,
           recruitmentName: `${u.firstName} ${u.lastName}`,
           candidates: typeof u.age === "number" ? u.age : 0,
-          startDate: u.birthDate ? u.birthDate : new Date().toISOString().split("T")[0],
+          startDate: u.birthDate
+            ? u.birthDate
+            : new Date().toISOString().split("T")[0],
           status: "In Progress" as Recruitment["status"],
         })),
+    }),
+
+    addRecruitment: builder.mutation<Recruitment, AddRecruitmentPayload>({
+      query: (body) => ({
+        url: "users/add",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    deleteRecruiment: builder.mutation<{ id: string }, string>({
+      query: (id) => ({
+        url: `users/${id}`,
+        method: "DELETE",
+      }),
     }),
   }),
 });
 
-export const { useGetRecruitmentsQuery } = recruitmentsApi;
+export const {
+  useGetRecruitmentsQuery,
+  useAddRecruitmentMutation,
+  useDeleteRecruimentMutation,
+} = recruitmentsApi;
