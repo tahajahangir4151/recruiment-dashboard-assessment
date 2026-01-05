@@ -13,6 +13,7 @@ import {
 import { Bell, ChevronDown, Menu } from "lucide-react";
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useRouter } from "next/navigation";
 
 const Header = ({
   onOpenSidebar,
@@ -22,16 +23,14 @@ const Header = ({
   title?: string;
 }) => {
   const dispatch = useDispatch();
-  const { data: countryList, isLoading } = useGetCountriesQuery();
-  const { selectedCountryCode } = useSelector((state: RootState) => state.country);
+  const { data: countries, isLoading } = useGetCountriesQuery();
+  const { selectedCountryCode } = useSelector(
+    (state: RootState) => state.country
+  );
 
-  const currentCountry = countryList?.find((c) => c.cca2 === selectedCountryCode);
-  const flagSrc = currentCountry?.flags.svg || "https://flagcdn.com/us.svg";
-  const displayCode = selectedCountryCode || "US";
-
-  function selectCountry(code: string) {
-    dispatch(setCountry({ code, label: code.slice(0, 2).toUpperCase() }));
-  }
+  const selectedCountry = countries?.find(
+    (c) => c.cca2 === selectedCountryCode
+  );
 
   return (
     <header className="flex h-16 items-center justify-between px-4 md:px-8 border-b bg-white">
@@ -43,7 +42,9 @@ const Header = ({
           <Menu />
         </button>
 
-        <h1 className="text-lg md:text-xl font-bold text-slate-800">{title || "My Recruitments"}</h1>
+        <h1 className="text-lg md:text-xl font-bold text-slate-800">
+          {title || "My Recruitments"}
+        </h1>
       </div>
 
       <div className="flex items-center gap-3">
@@ -53,22 +54,41 @@ const Header = ({
               {isLoading ? (
                 <div className="w-5 h-3 bg-slate-200 animate-pulse rounded" />
               ) : (
-                <img src={flagSrc} alt="Flag" className="w-5 h-auto rounded-sm" />
+                <img
+                  src={
+                    selectedCountry?.flags.svg || "https://flagcdn.com/us.svg"
+                  }
+                  alt="Flag"
+                  className="w-5 h-auto rounded-sm"
+                />
               )}
-
-              <span className="text-sm font-medium">{displayCode}</span>
+              <span className="text-sm font-medium">{selectedCountryCode}</span>
               <ChevronDown className="w-4 h-4 opacity-60" />
             </button>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent align="end" className="w-52 mt-2 rounded-md border bg-white shadow-lg max-h-70 overflow-y-auto z-10">
-            {countryList?.map((country) => (
+          <DropdownMenuContent
+            align="end"
+            className="w-52 mt-2 rounded-md border bg-white shadow-lg max-h-70 overflow-y-auto z-10"
+          >
+            {countries?.map((country) => (
               <DropdownMenuItem
                 key={country.cca2}
-                onClick={() => selectCountry(country.cca2)}
+                onClick={() =>
+                  dispatch(
+                    setCountry({
+                      code: country.cca2,
+                      label: country.cca2.slice(0, 2).toUpperCase(),
+                    })
+                  )
+                }
                 className="flex items-center gap-3 px-3 py-2 text-sm cursor-pointer hover:bg-slate-100 focus:bg-slate-100"
               >
-                <img src={country.flags.svg} alt={country.name.common} className="w-4 h-auto" />
+                <img
+                  src={country.flags.svg}
+                  alt={country.name.common}
+                  className="w-4 h-auto"
+                />
                 <span>{country.name.common}</span>
               </DropdownMenuItem>
             ))}
@@ -87,7 +107,9 @@ const Header = ({
             </Avatar>
 
             <div className="flex items-center gap-1">
-              <span className="text-sm font-medium text-slate-700">John Doe</span>
+              <span className="text-sm font-medium text-slate-700">
+                John Doe
+              </span>
               <ChevronDown className="w-4 h-4 text-slate-500" />
             </div>
           </div>

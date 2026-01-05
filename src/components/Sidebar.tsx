@@ -21,7 +21,7 @@ const Sidebar = ({
 
             <nav className="mt-4">
               <Link
-                href="#"
+                href="/"
                 className="flex items-center gap-3 rounded-lg py-3 text-sm font-bold"
               >
                 <Image
@@ -77,15 +77,17 @@ const Sidebar = ({
                 My Recruitment
               </Link>
 
-              <button
-                onClick={() => {
-                  onClose && onClose();
-                  window.location.href = "/create";
-                }}
-                className="mt-4 w-full py-3 rounded-md bg-emerald-500 text-white text-sm font-medium hover:bg-emerald-600"
-              >
-                Create New Recruitment
-              </button>
+              <Link href={"/create"}>
+                {" "}
+                <button
+                  onClick={() => {
+                    onClose && onClose();
+                  }}
+                  className="mt-4 w-full py-3 rounded-md bg-emerald-500 text-white text-sm font-medium hover:bg-emerald-600"
+                >
+                  Create New Recruitment
+                </button>
+              </Link>
             </nav>
 
             <div className="absolute bottom-0 left-0 w-full p-4 border-t border-[#06BF97] bg-[#142D52]">
