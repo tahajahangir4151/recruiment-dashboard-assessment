@@ -1,7 +1,6 @@
-import { LanguageState } from "@/types/types";
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 
-const initialState: LanguageState = {
+const initialState= {
   selectedCountryCode: "US",
 }
 
